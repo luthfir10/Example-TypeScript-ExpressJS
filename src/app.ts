@@ -1,53 +1,67 @@
 import http from 'http';
-import express from 'express';
+import express, { Application } from 'express';
 import bodyParser from 'body-parser';
 import logging from './config/logging';
 import config from './config/config';
 import sampleRoutes from './routes/sample';
 
-const NAMESPACE = 'Server';
-const router = express();
+class App {
+    private readonly NAMESPACE: string;
+    private readonly application: Application;
 
-/** Logging the request */
-router.use((req, res, next) => {
-    logging.info(NAMESPACE, `METHOD - [${req.method}], URL - [${req.url}], IP - [${req.socket.remoteAddress}]`);
+    constructor() {
+        this.NAMESPACE = 'Server';
+        this.application = express();
 
-    res.on('finish', () => {
-        logging.info(NAMESPACE, `METHOD - [${req.method}], URL - [${req.url}], IP - [${req.socket.remoteAddress}], STATUS - [${res.statusCode}]`);
-    });
-
-    next();
-});
-
-/** Parse the request */
-router.use(bodyParser.urlencoded({ extended: false }));
-router.use(bodyParser.json());
-
-/** Roules of our API */
-router.use((req, res, next) => {
-    res.header('Acces-Control-Allow-Origin', '*');
-    res.header('Acces-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-
-    if (req.method == 'OPTIONS') {
-        res.header('Acces-Control-Allow-Methods', 'GET PATCH DELETE POST PUT');
-        return res.status(200).json({});
+        this.routes();
     }
 
-    next();
-});
+    private routes(): void {
+        this.application.use('/sample', sampleRoutes);
 
-/** Routes */
-router.use('/sample', sampleRoutes);
+        /** Catch error 404 endpoint not found */
+        this.application.use((req, res, next) => {
+            const error = new Error('not found');
 
-/** Error Handling */
-router.use((req, res, next) => {
-    const error = new Error('not found');
+            return res.status(404).json({
+                message: error.message
+            });
+        });
+    }
 
-    return res.status(404).json({
-        message: error.message
-    });
-});
+    public run(): void {
+        /** Logging the request */
+        this.application.use((req, res, next) => {
+            logging.info(this.NAMESPACE, `METHOD - [${req.method}], URL - [${req.url}], IP - [${req.socket.remoteAddress}]`);
 
-/** Create the server */
-const httpServer = http.createServer(router);
-httpServer.listen(config.server.port, () => logging.info(NAMESPACE, `Server running on ${config.server.hostname}:${config.server.port}`));
+            res.on('finish', () => {
+                logging.info(this.NAMESPACE, `METHOD - [${req.method}], URL - [${req.url}], IP - [${req.socket.remoteAddress}], STATUS - [${res.statusCode}]`);
+            });
+
+            next();
+        });
+
+        /** Setup port */
+        this.application.set('port', config.server.port);
+
+        const server = http.createServer(this.application);
+
+        const onListening = (): void => {
+            const addr = server.address();
+
+            const bind = typeof addr === 'string' ? `${addr}` : `${addr?.port}`;
+
+            const host = config.server.hostname;
+
+            const message = `Server running on ${config.server.hostname}:${config.server.port}`;
+
+            logging.info(this.NAMESPACE, message);
+        };
+
+        /** Run listener */
+        server.listen(config.server.port);
+        server.on('listening', onListening);
+    }
+}
+
+export default App;
