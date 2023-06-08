@@ -1,0 +1,32 @@
+{
+    "welcome": "Selamat Datang",
+    "errors": {
+        "permission_access": "Anda tidak diizinkan",
+        "already_phone": "Nomor telepon sudah digunakan",
+        "already_email": "Email sudah digunakan",
+        "incorrect_email_or_pass": "Email atau kata sandi salah",
+        "incorrect_phone": "Nomor telepon salah",
+        "incorrect_pin": "Pin salah",
+        "incorrect_UUID_format": "Format uuid tidak benar",
+        "invalid_user_login": "Login pengguna tidak valid",
+        "session_ended": "Sesi masuk telah berakhir, harap masuk kembali.",
+        "otp_expired": "OTP kedaluwarsa",
+        "in_active_account": "Akun anda tidak aktif",
+        "account_not_found": "Akun anda tidak ditemukan atau tidak terdaftar",
+        "block_policy": "Akun anda telah diblokir karena melanggar kebijakan",
+        "cant_be_empty": "Tidak boleh kosong",
+        "not_found": "Data tidak ditemukan atau telah dihapus",
+        "mail_template": "Direktori template email pendaftaran tidak benar",
+        "too_many_request": "Terlalu banyak permintaan",
+        "please_check_your_email": "Silakan periksa akun email Anda untuk memverifikasi email Anda dan melanjutkan proses pendaftaran"
+    },
+    "success": {
+        "register": "Pendaftaran berhasil",
+        "login": "Berhasil masuk",
+        "logout": "Anda telah keluar dari aplikasi",
+        "data_received": "Data telah diterima",
+        "data_added": "Data telah ditambahkan",
+        "data_updated": "Data telah diperbarui",
+        "data_deleted": "Data telah dihapus"
+    }
+}

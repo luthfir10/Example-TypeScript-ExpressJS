@@ -1,65 +1,134 @@
+/* eslint-disable @typescript-eslint/no-throw-literal */
+import { APP_NAME, APP_PORT, NODE_ENV } from './config/env';
+import { i18nConfig } from './config/i18nextConfig';
+import Express, { Application, NextFunction, Request, Response } from 'express';
+import cookieParser from 'cookie-parser';
+import chalk from 'chalk';
+import compression from 'compression';
 import http from 'http';
-import express, { Application } from 'express';
-import bodyParser from 'body-parser';
-import logging from './config/logging';
-import config from './config/config';
-import sampleRoutes from './routes/sample';
+import hpp from 'hpp';
+import Cors from 'cors';
+import Helmet from 'helmet';
+import Logger from 'morgan';
+import UserAgent from 'express-useragent';
+import i18nextMiddleware from 'i18next-http-middleware';
+import requestIp from 'request-ip';
+
+import ExpressErrorResponse from './middlewares/ExpressErrorResponse';
+import ExpressErrorYup from './middlewares/ExpressErrorYup';
+import indexRoutes from './routes/index';
+import allowedOrigins from './constants/ConstAllowedOrigins';
+import winstonLogger, { winstonStream } from './config/Logger';
+import { logServer } from './helpers/Formatter';
+import ResponseError from './modules/Response/ResponseError';
+import ExpressErrorMongoose from './middlewares/ExpressErrorMongoose';
+
+const optCors: Cors.CorsOptions = {
+    origin: allowedOrigins
+};
 
 class App {
-    private readonly NAMESPACE: string;
     private readonly application: Application;
+    private readonly port: number | string;
 
     constructor() {
-        this.NAMESPACE = 'Server';
-        this.application = express();
+        this.port = APP_PORT;
+        this.application = Express();
+        this.plugins();
 
         this.routes();
     }
 
+    /** Setup Plugin & Middleware */
+    private plugins(): void {
+        this.application.use(Helmet());
+        this.application.use(Cors(optCors));
+        this.application.use(Logger('combined', { stream: winstonStream }));
+        this.application.use(Express.urlencoded({ extended: true }));
+        this.application.use(
+            Express.json({
+                limit: '200mb',
+                type: 'application/json'
+            })
+        );
+        this.application.use(cookieParser());
+        this.application.use(compression());
+        this.application.use(hpp());
+        this.application.use(requestIp.mw());
+        this.application.use(UserAgent.express());
+        this.application.use(i18nextMiddleware.handle(i18nConfig));
+    }
+
     private routes(): void {
-        this.application.use('/sample', sampleRoutes);
+        this.application.use(indexRoutes);
 
         /** Catch error 404 endpoint not found */
-        this.application.use((req, res, next) => {
-            const error = new Error('not found');
-
-            return res.status(404).json({
-                message: error.message
-            });
+        this.application.use('*', function (req: Request, res: Response) {
+            throw new ResponseError.NotFound(`Sorry, HTTP resource you are looking for was not found.`);
         });
     }
 
+    /** Run App */
     public run(): void {
-        /** Logging the request */
-        this.application.use((req, res, next) => {
-            logging.info(this.NAMESPACE, `METHOD - [${req.method}], URL - [${req.url}], IP - [${req.socket.remoteAddress}]`);
+        this.application.use(ExpressErrorYup);
+        this.application.use(ExpressErrorMongoose);
+        this.application.use(ExpressErrorResponse);
 
-            res.on('finish', () => {
-                logging.info(this.NAMESPACE, `METHOD - [${req.method}], URL - [${req.url}], IP - [${req.socket.remoteAddress}], STATUS - [${res.statusCode}]`);
-            });
+        /** Error handler */
+        this.application.use(function (err: any, req: Request, res: Response) {
+            /** Set locals, only providing error in development */
+            res.locals.message = err.message;
+            res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-            next();
+            /** Add this line to include winston logging */
+            winstonLogger.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
+
+            /** Render the error page */
+            res.status(err.status || 500);
+            res.render('error');
         });
 
-        /** Setup port */
-        this.application.set('port', config.server.port);
-
+        /** setup port */
+        this.application.set('port', this.port);
         const server = http.createServer(this.application);
+
+        const onError = (error: { syscall: string; code: string }): void => {
+            if (error.syscall !== 'listen') {
+                throw error;
+            }
+
+            const bind = typeof this.port === 'string' ? `Pipe ${this.port}` : `Port ${this.port}`;
+
+            /** handle specific listen errors with friendly messages */
+            switch (error.code) {
+                case 'EACCES':
+                    console.error(`${bind} requires elevated privileges`);
+                    process.exit(1);
+                    break;
+                case 'EADDRINUSE':
+                    console.error(`${bind} is already in use`);
+                    process.exit(1);
+                    break;
+                default:
+                    throw error;
+            }
+        };
 
         const onListening = (): void => {
             const addr = server.address();
-
             const bind = typeof addr === 'string' ? `${addr}` : `${addr?.port}`;
 
-            const host = config.server.hostname;
+            const host = chalk.cyan(`http://localhost:${bind}`);
 
-            const message = `Server running on ${config.server.hostname}:${config.server.port}`;
+            const msgType = `${APP_NAME}`;
+            const message = `Server listening on ${host} & ENV: ${chalk.blue(NODE_ENV)}`;
 
-            logging.info(this.NAMESPACE, message);
+            console.log(logServer(msgType, message));
         };
 
         /** Run listener */
-        server.listen(config.server.port);
+        server.listen(this.port);
+        server.on('error', onError);
         server.on('listening', onListening);
     }
 }
