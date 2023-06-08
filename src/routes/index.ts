@@ -1,10 +1,8 @@
-import { BASE_URL_SERVER } from '../config/baseURL';
-import { NODE_ENV } from '../config/env';
 import asyncHandler from '../helpers/asyncHandler';
 import { formatDateTime } from '../helpers/Date';
 import HttpResponse from '../modules/Response/HttpResponse';
 import ResponseError from '../modules/Response/ResponseError';
-import v1Route from './sample';
+import sample from './sample';
 import Express, { Request, Response } from 'express';
 
 const route = Express.Router();
@@ -47,11 +45,11 @@ route.get(
 );
 
 // Forbidden Api
-route.get('/v1', function (req: Request, res: Response) {
+route.get('/sample', function (req: Request, res: Response) {
     throw new ResponseError.Forbidden(`Forbidden, wrong access endpoint: ${req.url}`);
 });
 
 // Using Route v1
-route.use('/v1', v1Route);
+route.use('/sample', sample);
 
 export default route;
