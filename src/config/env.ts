@@ -6,7 +6,7 @@ export const NODE_ENV = process.env.NODE_ENV ?? 'development';
 
 // app
 export const APP_KEY = process.env.APP_KEY;
-export const APP_NAME = process.env.APP_NAME ?? 'expresso';
+export const APP_NAME = process.env.APP_NAME ?? 'exptyp';
 export const APP_LANG = process.env.APP_LANG ?? 'id';
 export const APP_PORT = process.env.APP_PORT ?? 5500;
 
@@ -29,8 +29,8 @@ export const JWT_SECRET_REFRESH_TOKEN: any = process.env.JWT_SECRET_REFRESH_TOKE
 export const JWT_REFRESH_TOKEN_EXPIRED = process.env.JWT_REFRESH_TOKEN_EXPIRED ?? '7d';
 
 // url staging
-export const URL_CLIENT_STAGING = process.env.URL_CLIENT_STAGING ?? 'https://sandbox.example.com';
-export const URL_SERVER_STAGING = process.env.URL_SERVER_STAGING ?? 'https://api-sandbox.example.com';
+export const URL_CLIENT_STAGING = process.env.URL_CLIENT_STAGING ?? 'https://example.com';
+export const URL_SERVER_STAGING = process.env.URL_SERVER_STAGING ?? 'https://api.example.com';
 
 // url production
 export const URL_CLIENT_PRODUCTION = process.env.URL_CLIENT_PRODUCTION ?? 'https://example.com';
@@ -42,7 +42,7 @@ export const MONGODB_PORT = process.env.MONGODB_PORT ?? 27017;
 export const MONGODB_AUTH = process.env.MONGODB_AUTH ?? 'admin';
 export const MONGODB_USERNAME = process.env.MONGODB_USERNAME ?? undefined;
 export const MONGODB_PASSWORD = process.env.MONGODB_PASSWORD ?? undefined;
-export const MONGODB_DATABASE = process.env.MONGODB_DATABASE ?? 'expresso';
+export const MONGODB_DATABASE = process.env.MONGODB_DATABASE ?? 'exptyp';
 
 // smtp
 export const MAIL_DRIVER = process.env.MAIL_DRIVER ?? 'smtp';
@@ -77,10 +77,3 @@ export const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET ?? un
 export const FIREBASE_MESSAGING_SENDER_ID = process.env.FIREBASE_MESSAGING_SENDER_ID ?? undefined;
 export const FIREBASE_APP_ID = process.env.FIREBASE_APP_ID ?? undefined;
 export const FIREBASE_MEASUREMENT_ID = process.env.FIREBASE_MEASUREMENT_ID ?? undefined;
-
-// aws s3
-export const AWS_ACCESS_KEY: any = process.env.AWS_ACCESS_KEY ?? undefined;
-export const AWS_SECRET_KEY: any = process.env.AWS_SECRET_KEY ?? undefined;
-export const AWS_BUCKET_NAME = process.env.AWS_BUCKET_NAME ?? 'expresso';
-export const AWS_REGION = process.env.AWS_REGION ?? 'ap-southeast-1';
-export const AWS_S3_EXPIRED = process.env.AWS_S3_EXPIRED ?? '7d';
